@@ -1,24 +1,29 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery, gql, useMutation } from '@apollo/client';
 
-export type Launch = {
-
-    "mission_name": string,
-    "launch_date_local": string,
-    "launch_site": {
-      "site_name_long": string,
-    }
- 
+export type Customer = {
+  id: number;
+  name: string;
+  industry: string;
 }
 
 const GET_DATA = gql`
 {
-  launchesPast(limit: 10) {
-    mission_name
-    launch_date_local
-    launch_site {
-      site_name_long
+  customers{
+    id
+    name
+    industry
+  }
+}
+`;
+
+const MUTATE_DATA = gql`
+mutation MUTATE_DATA($name: String!, $industry: String!){
+  CreateCustomer(name: $name, industry: $industry){
+    customer{
+      id
+      name
     }
   }
 }
@@ -26,21 +31,46 @@ const GET_DATA = gql`
 
 
 function App() {
+  const [name, setName] = useState<string>('');
+  const [industry, setIndustry] = useState<string>('');
   const {loading, error, data} = useQuery(GET_DATA);
+  const [CreateCustomer,{loading: createCustomerLoading, error:createCustomerError, data:createCustomerData}, 
+  ]= useMutation(MUTATE_DATA, {
+    refetchQueries: [
+      {query: GET_DATA},
+    ],
+  });
 
   useEffect(() => {
     console.log(loading, error, data);
+    console.log(CreateCustomer,createCustomerLoading, createCustomerError, createCustomerData,);
   });
 
   return (
     <div className="App">
+      {error ? <p>something went wrong</p> : null}
+      {loading ? <p>loading...</p> : null}
       {data ? 
-        data.launchesPast.map((launch: Launch) => {
+        data.customers.map((customer: Customer) => {
           return (
-            <p>{launch.mission_name +' '+ launch.launch_date_local}</p>
+            <p key={customer.id}>{customer.id +'   '+ customer.name +'   '+ customer.industry}</p>
           );
         })  
       : null}
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        CreateCustomer({variables: {name: name, industry: industry}});
+      }}>
+        <div>
+        <label htmlFor='name' >Name: </label>
+        <input id='name' type='text' value={name} onChange={(e)=> {setName(e.target.value)}} />
+        </div>
+        <div>
+        <label htmlFor='industry' >Indusrty: </label>
+        <input id='industry' type='text' value={industry} onChange={(e)=> {setIndustry(e.target.value)}} />
+        </div>
+        <button>Add Customer</button>
+      </form>
     </div>
   );
 }
