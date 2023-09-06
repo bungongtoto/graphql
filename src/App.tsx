@@ -68,7 +68,7 @@ function App() {
         data.customers.map((customer: Customer) => {
           return (
             <div key={customer.id}>
-              <h2 >{customer.name +'   '+ customer.industry}</h2>
+              <h2 >{customer.id +'   '+customer.name +'   '+ customer.industry}</h2>
               {customer.orders.map((order: Order) => {
                 return(
                   <div key={order.id}>
